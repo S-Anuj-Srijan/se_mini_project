@@ -1,0 +1,124 @@
+INSURANCE WORKFLOW AUTOMATION SYSTEM — TWO-WEEK EXECUTION PLAN
+Team: Anuj (integration/CI), Renetta (requirements/auth/application), Aswin (architecture/database/claims), Raghav (testing/documents)
+Period: Tuesday 27 October 2026 – Monday 9 November 2026 (10 workdays; weekends 31 Oct–1 Nov and 7–8 Nov)
+Sprint: Sprint 1 — Development and Integration
+Source baseline: Insurance_Workflow_SRS v1.1, SAD v1.1, STP v1.1 (proposed; approvals pending).
+
+SPRINT GOAL
+Deliver a demonstrable, integrated and testable academic insurance workflow prototype, with traceable Jira issues, genuine commits/PRs, automated CI checks, tests, and a tagged release candidate. Prioritise an end-to-end application journey (draft -> documents -> submit -> staff review -> decision -> audit), then claim eligibility if capacity permits. Do not report unimplemented SRS requirements or unexecuted STP cases as complete. Full SRS scope (31 requirements, 37 test cases) may exceed the two-week capacity; log gaps explicitly.
+
+TECHNICAL BASELINE TO DECIDE ON DAY 1
+Proposed by SAD, not already implemented: modular monolith, Python/FastAPI, PostgreSQL, TypeScript UI, private document storage, transactional audit/outbox with test adapters. Agree actual stack/versions and record in docs/ADR/. Use only synthetic data.
+
+DAILY GIT AND JIRA RULES
+1. Create a Jira story/task/bug with acceptance criteria, owner and estimated story points BEFORE starting.
+2. Move it To Do -> In Progress -> In Review -> QA -> Done as evidence supports.
+3. Create one branch per Jira issue: feat/INS-KEY-short-name, test/INS-KEY-short-name, fix/INS-KEY-short-name.
+4. Commit logical working changes; sample messages below are plans, not quotas or a claim work happened. Include actual Jira issue key after creation.
+5. Push the branch and open a PR with issue link, summary, test evidence and screenshots as appropriate.
+6. CI: formatting/lint, unit tests and meaningful API checks; expand to DB integration/security once available. Require a passing check and at least one OTHER contributor's review before merge.
+7. Use protected main; no direct feature pushes, fabricated commits, or self-approval. Record merge SHA, actual test result, and daily blocker.
+8. Each day's closure: Jira statuses/remaining SP, PR URLs, commits, CI result, demos or screenshots, problems and next steps.
+
+DAY 1 — TUE 27 OCT — PROJECT FOUNDATION
+Anuj: Create Jira Scrum project, backlog, Sprint 1 (27 Oct–9 Nov); invite team to GitHub; create private repo, branches/PR/ruleset policy.
+Renetta: Review SRS requirements and choose acceptance criteria for a minimal end-to-end workflow; flag unapproved assumptions.
+Aswin: Create skeleton for proposed FastAPI backend, architecture ADR and environment instructions.
+Raghav: Establish STP test mapping, pytest structure, synthetic fixtures/test IDs.
+Suggested commits: chore: initialise repo; docs: add requirements baseline; chore: scaffold API; test: initialise test fixtures.
+Done when: all members have access, work visible in Jira, repo initialised, scope shortlist agreed.
+
+DAY 2 — WED 28 OCT — WORKING BUILD & CI
+Anuj: Configure GitHub Actions on PRs (Python install, ruff, pytest), PR template, branch protection after first green run.
+Renetta: Define role/session and application validation contracts.
+Aswin: PostgreSQL local container, migrations, core user/application schema, repeatable setup.
+Raghav: Add first genuine tests, test data factory and CI test artifact/report handling.
+Suggested commits: ci: run lint and tests on PR; feat: define auth schemas; feat: add base migrations; test: add smoke tests.
+Done when: clean checkout can run backend, migrations, and nonempty passing CI.
+
+DAY 3 — THU 29 OCT — AUTHENTICATION & AUTHORIZATION
+Anuj: Review integration and permission boundaries; ensure no route trusts caller-supplied owner/role.
+Renetta: Implement sign-in, sign-out and session checks for seeded demo accounts.
+Aswin: Implement user/role persistence and permissions lookup.
+Raghav: Test valid/invalid sign-in, logout and cross-role access (initial TC-001/TC-032 subsets).
+Suggested commits: feat: implement sessions; feat: persist roles; test: cover login and access denial.
+Done when: seeded accounts can authenticate; unauthorized API access is rejected server-side.
+
+DAY 4 — FRI 30 OCT — APPLICATION DRAFTS
+Anuj: Define version/idempotency contract; integrate API error format.
+Renetta: Implement create/read/update application drafts and required-field validation.
+Aswin: Persist application/owner/version; migration and repositories.
+Raghav: Test draft persistence and isolation between applicants (TC-002 subset).
+Suggested commits: feat: add draft endpoints; feat: persist application drafts; test: cover cross-owner draft denial.
+Done when: applicant A saves a draft across sign-ins and applicant B cannot access it.
+
+WEEKEND — SAT 31 OCT, SUN 1 NOV — NO MANDATORY WORK
+Optional only: review outstanding PRs; do not invent activity or change sprint scope silently.
+
+DAY 5 — MON 2 NOV — DOCUMENT UPLOAD & SUBMISSION
+Anuj: Implement atomic application submission transition, version and idempotency check.
+Renetta: Basic applicant submission UI/HTML form with validation feedback.
+Aswin: Persist document metadata and submission state/audit transaction boundaries.
+Raghav: Implement/private-test upload validation (type, 10 MiB, count, quarantine/clean adapter), TC-003 to TC-006 subsets.
+Suggested commits: feat: add submission transition; feat: add submission form; feat: store document metadata; test: cover upload boundaries.
+Done when: incomplete submission fails without mutation; complete seeded clean-document draft submits once.
+
+DAY 6 — TUE 3 NOV — ASSIGNMENT & DOCUMENT VERIFICATION
+Anuj: Implement admin assignment and basic staff queue endpoints.
+Renetta: Staff queue and assigned-record view.
+Aswin: Assignment history and transaction support.
+Raghav: Verification/rejection endpoint and corrections test cases TC-007/TC-012 subsets.
+Suggested commits: feat: implement assignment; feat: add staff queue; feat: persist assignment history; test: cover verification rules.
+Done when: assigned verifier can review clean docs; unassigned staff cannot.
+
+DAY 7 — WED 4 NOV — ASSESSMENT & DECISION
+Anuj: Build application workflow state machine, processor assessment and independent approver gate.
+Renetta: Approval/rejection screen with mandatory reason and visible record state.
+Aswin: Transactional state + audit event + outbox intent; stale-version handling.
+Raghav: Test allowed/forbidden transitions, self-approval and retry logic (TC-013/015/016/023/024 subsets).
+Suggested commits: feat: add review and decision transitions; feat: add decision UI; feat: write audit and outbox atomically; test: enforce independent approval.
+Done when: seeded end-to-end application can reach a terminal decision; invalid transitions leave no partial writes.
+
+DAY 8 — THU 5 NOV — CLAIM PATH & NOTIFICATIONS (CAPACITY CHECK)
+Anuj: Integrate claim routes with common authorization/state utilities; if core app flow still fails, fix it first.
+Renetta: Claim form or public status/history view, prioritised by remaining sprint capacity.
+Aswin: Seeded policy ownership and inclusive-date/amount eligibility; basic claim draft/submit.
+Raghav: Claim boundary test cases TC-009 to TC-011; notification-worker stub testing if built.
+Suggested commits: feat: add claim eligibility; feat: add claim form; feat: add status history; test: cover coverage boundaries.
+Done when: claim eligibility is reproducible OR unfinished claim items are documented as open, not marked Done.
+
+DAY 9 — FRI 6 NOV — STABILISATION & REGRESSION
+Anuj: Merge reviewed green PRs; resolve integration failures; prepare release checklist.
+Renetta: Test applicant/staff screens including keyboard focus and validation messaging.
+Aswin: Fix migrations, DB constraints, and outbox worker behavior under stubbed email failure.
+Raghav: Run consolidated smoke and targeted integration suite; file Jira bugs with reproduction evidence.
+Suggested commits: fix: resolve identified integration defect; test: extend smoke regression; docs: record environment and test gaps.
+Done when: CI green on main, reproducible setup, known defects documented, demo path stable.
+
+WEEKEND — SAT 7 NOV, SUN 8 NOV — NO MANDATORY WORK
+Keep sprint history accurate; preserve blockers for Monday review.
+
+DAY 10 — MON 9 NOV — DEMO, RELEASE CANDIDATE & REVIEW
+Anuj: Verify final PRs/CI; tag passing commit v0.1.0-rc1; export Jira sprint report, burndown and commit/PR evidence.
+Renetta: Demonstrate applicant journey, compare results to accepted stories.
+Aswin: Demonstrate staff/claim flow as implemented; document deployment/migration commands.
+Raghav: Record smoke-test results against exact SHA, test coverage and unexecuted STP cases; prepare Sprint 2 entry report.
+Suggested commits: docs: record sprint review and release notes; test: add final regression fixes (only if needed).
+Done when: tagged source version, working demo, honest acceptance/gaps report, Sprint 1 retrospective and Sprint 2 input backlog exist.
+
+SPRINT 1 ACCEPTANCE / DECISION GATE
+Required: reproduce local setup; at least one working authenticated end-to-end application flow; role authorization; documented test evidence on exact build; protected review process and passing CI; no knowingly critical exposed-data flaw in demo.
+Not claimed: full 37-case STP execution, 30-day availability, production approval, fully implemented insurer integrations or automatic payouts.
+If core acceptance fails: do not tag as accepted. Keep unresolved stories/defects visible and replan Sprint 2 based on actual progress.
+
+DAILY REPORT TEMPLATE (COMPLETE FROM REAL ACTIVITY)
+Date:
+Jira issues moved / story points completed:
+Anuj — actual work; branch/commit/PR; test result; blocker:
+Renetta — actual work; branch/commit/PR; test result; blocker:
+Aswin — actual work; branch/commit/PR; test result; blocker:
+Raghav — actual work; branch/commit/PR; test result; blocker:
+CI run URL and status:
+Merged PRs / release SHA:
+Bugs created/closed:
+Tomorrow's adjustments:

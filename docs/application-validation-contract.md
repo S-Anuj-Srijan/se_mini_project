@@ -1,92 +1,70 @@
 # Application Validation Contract
 
-**Related SRS requirements:** INS-F-002, INS-F-003, INS-F-004,
-INS-F-006, INS-F-010, INS-F-012, INS-F-018, INS-SR-002, INS-SR-004\
-**Status:** Contract proposal for review; exact API routes and schema
-depend on the agreed implementation.
+**Project:** Insurance Workflow Automation System  
+**Source:** Software Requirements Specification (SRS), Version 1.1  
+**Status:** Proposed contract for implementation; stakeholder approval pending.
 
-## Required application fields
+## Purpose
+Define expected validation for application drafts, document uploads, and submission. This contract follows the SRS and does not claim implementation or test completion.
 
-The SRS identifies these mandatory application fields: - Applicant
-name - Contact email - Coverage selection
+## Related requirements
+- **INS-F-002:** Application drafts
+- **INS-F-003:** Application submission
+- **INS-F-004:** Document upload
+- **INS-F-006:** Correction requests
+- **INS-F-010:** Application processing
+- **INS-F-018:** Concurrency and retries
+- **INS-SR-002:** Authorization at the server
+- **INS-SR-004:** Safe input and files
 
-The SRS also proposes an application document checklist of identity
-evidence and address evidence. Required documents must have a clean scan
-result before submission.
+## Mandatory application fields
+The SRS lists:
+- Applicant name
+- Contact email
+- Coverage selection
 
-## Draft behaviour
+The proposed application document checklist includes identity evidence and address evidence. Confirm additional field-level formats or limits with the team/stakeholders rather than inventing them.
 
--   An authenticated applicant can create, view, and update their own
-    draft.
--   A draft must persist across sign-out and sign-in.
--   An applicant cannot retrieve or modify another applicant's draft.
--   Server-side validation is authoritative; client-side validation is
-    only a usability aid.
--   Use record versioning to detect stale updates. The SRS requires
-    stale updates to return a conflict.
+## Draft rules
+- An authenticated applicant can create, view, and update their own draft.
+- A saved draft remains available after sign-out and sign-in.
+- Another applicant cannot retrieve or edit the draft.
+- Validation is enforced server-side; browser validation alone is insufficient.
+- Updates use the current record version. A stale update returns a conflict.
 
-## Submission behaviour
+## Submission rules
+- Required application fields must be valid.
+- Required documents must be present and have a clean scan result before submission.
+- Successful submission assigns an application reference and changes state to `Submitted`.
+- Missing required fields or documents cause submission to fail, identify the correction, and leave the draft unchanged.
+- Submission commands use an `Idempotency-Key` and current record version.
+- Retrying an identical request must not create a duplicate submission.
 
--   Submission is allowed only when required fields are valid and
-    required documents are clean.
--   A successful submission assigns an application reference and changes
-    the state to `Submitted`.
--   An incomplete submission is rejected with actionable correction
-    information and leaves the draft unchanged.
--   Submission must use an idempotency key and current record version.
--   Retrying an identical request must not create a duplicate
-    submission.
-
-## Document validation
-
--   Accepted formats: PDF, JPEG, PNG.
--   Maximum size: 10 MiB per file.
--   Maximum active documents: 10 per record.
--   Uploads are quarantined until a clean scan result is available.
--   A blocked, oversized, disallowed, or excess upload must not become
-    reviewable.
--   A replacement document version invalidates prior verification for
-    that checklist item.
--   Document rejection requires a reason.
+## Document upload rules
+- Accepted formats: PDF, JPEG, PNG.
+- Maximum file size: 10 MiB per file.
+- Maximum active documents: 10 per record.
+- Uploads remain quarantined and not reviewable until scan state is `Clean`.
+- Oversized, disallowed, excess, or malicious files are rejected or quarantined.
+- A new document version invalidates prior verification for that checklist item.
+- A verifier's rejection requires a reason.
 
 ## Correction and processing rules
+- A verifier or processor can return a record to `Needs information` with specific corrections.
+- Applicants can resubmit corrected fields or document versions.
+- Original versions remain traceable; corrected documents require fresh verification.
+- An application can progress to `Pending approval` only after mandatory documents are verified and an assessment is recorded.
 
--   A verifier or processor can return a record to `Needs information`
-    with specific corrections.
--   The applicant can resubmit corrected fields or document versions.
--   Original versions remain traceable and corrected documents require
-    fresh verification.
--   A record cannot progress to `Pending approval` until mandatory
-    documents are verified and an assessment is recorded.
-
-## Error and security rules
-
--   Use a consistent API error structure agreed by the team.
--   Reject malformed or missing required values without partially
-    mutating the record.
--   Validate input on the server, use parameterized persistence queries,
-    and escape displayed text.
--   Enforce owner, role, and assignment checks server-side.
--   Do not expose internal assessment notes or sensitive data in
-    applicant-facing responses.
-
-## Fields requiring confirmation
-
-Do not invent additional application fields, coverage options,
-email-format policy beyond what the team agrees, or extra size/length
-limits. Confirm them against the SRS and stakeholder decisions before
-implementation.
+## Error and security behaviour
+Use the API error response format agreed for the implementation. Invalid or incomplete submissions must not partially mutate a record. Validate fields server-side, use parameterized persistence queries, escape displayed text, enforce ownership/role/assignment checks, and do not expose internal assessment notes in applicant-facing history.
 
 ## Verification checklist
+- [ ] Mandatory fields are enforced.
+- [ ] Missing fields/documents prevent submission without changing the draft.
+- [ ] Draft persistence and cross-owner isolation are checked.
+- [ ] File type, size, count, quarantine, and scan-state rules are checked.
+- [ ] Duplicate submissions are prevented by idempotency.
+- [ ] Stale record versions return a conflict.
+- [ ] Corrections preserve version traceability and require fresh verification.
 
--   [ ] Required fields are enforced.
--   [ ] Invalid/incomplete submissions leave the draft unchanged.
--   [ ] Draft persists across sessions.
--   [ ] Cross-owner access is denied.
--   [ ] Upload format, size, count, and scan-state rules are enforced.
--   [ ] Duplicate submission is prevented.
--   [ ] Stale-version updates return a conflict.
--   [ ] Corrections preserve version history and require fresh document
-    verification.
-
-These are planned checks, not claims of passing tests.
+These are planned checks. Record actual test commands and results before reporting a check as passed.
